@@ -1,5 +1,5 @@
-node_modules
-built
-.idea
+/node_modules
+/built
+/.idea
 
-package-lock.json
+/package-lock.json
