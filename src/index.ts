@@ -1,10 +1,15 @@
-const app = require('express')();
-const http = require('http')
-    .createServer(app);
-const io = require('socket.io')(http);
+'use strict';
+
+const express = require('express'),
+  app = express(),
+  http = require('http').createServer(app),
+  io = require('socket.io')(http),
+  path = require('path');
+
+app.use('/styles', express.static(path.join(__dirname, 'styles')));
 
 app.get('/', (req, res) => {
-  res.sendFile(`${__dirname}/html/index.html`);
+  res.sendFile(path.join(__dirname, 'html', 'index.html'));
 });
 
 io.on('connection', socket => {

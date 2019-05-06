@@ -1,8 +1,13 @@
+'use strict';
+
 const gulp = require('gulp'),
     ts = require('gulp-typescript'),
     spawn = require('child_process').spawn,
     log = require('fancy-log'),
-    fileSync = require('gulp-file-sync');
+    fileSync = require('gulp-file-sync'),
+    sass = require('gulp-sass');
+
+sass.compiler = require('node-sass');
 
 let node;
 
@@ -10,6 +15,9 @@ const sourcePath = 'src';
 const sourceMask = `${sourcePath}/*.ts`;
 const distPath = 'dist';
 const htmlDir = 'html';
+const sourceHtmlPath = [sourcePath, htmlDir].join('/');
+const stylesDir = 'styles';
+const sourceStylesMask = [sourcePath, stylesDir, '*.scss'].join('/');
 
 const tsProject = ts.createProject('tsconfig.json');
 
@@ -19,10 +27,16 @@ gulp.task('build', function () {
         .pipe(gulp.dest(distPath));
 });
 
-gulp.task('assets', function () {
-    fileSync([sourcePath, htmlDir].join('/'), [distPath, htmlDir].join('/'));
+gulp.task('html', function () {
+    fileSync(sourceHtmlPath, [distPath, htmlDir].join('/'));
 
     return Promise.resolve();
+});
+
+gulp.task('sass', function () {
+    return gulp.src(sourceStylesMask)
+        .pipe(sass.sync().on('error', sass.logError))
+        .pipe(gulp.dest([distPath, stylesDir].join('/')));
 });
 
 gulp.task('run', function () {
@@ -38,13 +52,14 @@ gulp.task('run', function () {
 });
 
 gulp.task('watch', function () {
-    gulp.watch(sourceMask, gulp.series('build', 'assets', 'run'));
+    gulp.watch(`${sourcePath}/**/*`, gulp.series('build', 'sass', 'html', 'run'));
 
     return Promise.resolve();
 });
 
-gulp.task('serve', gulp.series('build', 'assets', 'run', 'watch'));
+gulp.task('serve', gulp.series('build', 'sass', 'html', 'run', 'watch'));
 
 process.on('exit', function () {
     if (node) node.kill();
+    log('Exit with code 0');
 });
